@@ -98,7 +98,7 @@ map_data = st_folium(m, width=700, height=500)
 # -----------------------
 # HEATMAP UI
 # -----------------------
-st.subheader("📊 Kolkata Price Heatmap")
+'''st.subheader("📊 Kolkata Price Heatmap")
 
 if not heatmap_df.empty:
     layer = pdk.Layer(
@@ -120,7 +120,7 @@ if not heatmap_df.empty:
         initial_view_state=view_state,
     ))
 else:
-    st.warning("No heatmap data available")
+    st.warning("No heatmap data available")'''
 
 # -----------------------
 # WAIT FOR MAP CLICK
