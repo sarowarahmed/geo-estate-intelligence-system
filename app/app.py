@@ -98,29 +98,29 @@ map_data = st_folium(m, width=700, height=500)
 # -----------------------
 # HEATMAP UI
 # -----------------------
-'''st.subheader("📊 Kolkata Price Heatmap")
+#st.subheader("📊 Kolkata Price Heatmap")
 
-if not heatmap_df.empty:
-    layer = pdk.Layer(
-        "HeatmapLayer",
-        data=heatmap_df,
-        get_position='[lon, lat]',
-        get_weight="price",
-        radiusPixels=60,
-    )
+#if not heatmap_df.empty:
+#    layer = pdk.Layer(
+#        "HeatmapLayer",
+#        data=heatmap_df,
+#        get_position='[lon, lat]',
+#        get_weight="price",
+#        radiusPixels=60,
+#    )
 
-    view_state = pdk.ViewState(
-        latitude=22.57,
-        longitude=88.36,
-        zoom=10,
-    )
+#    view_state = pdk.ViewState(
+#        latitude=22.57,
+#        longitude=88.36,
+#        zoom=10,
+#    )
 
-    st.pydeck_chart(pdk.Deck(
-        layers=[layer],
-        initial_view_state=view_state,
-    ))
-else:
-    st.warning("No heatmap data available")'''
+#    st.pydeck_chart(pdk.Deck(
+#        layers=[layer],
+#        initial_view_state=view_state,
+#    ))
+#else:
+#    st.warning("No heatmap data available")'''
 
 # -----------------------
 # WAIT FOR MAP CLICK
