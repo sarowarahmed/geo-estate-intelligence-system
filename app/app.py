@@ -70,7 +70,7 @@ def prepare_heatmap_data(df):
 
     return pd.DataFrame(heatmap_data)
 
-heatmap_df = prepare_heatmap_data(df)
+#heatmap_df = prepare_heatmap_data(df)
 
 # -----------------------
 # SIDEBAR INPUT
