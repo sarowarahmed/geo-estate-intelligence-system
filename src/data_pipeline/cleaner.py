@@ -1,8 +1,9 @@
 import re
 import math
-from .geo_features import get_distance_to_metro
 
-
+# -----------------------------------
+# LOCATION MAP
+# -----------------------------------
 location_MAP = {
     "new town": "New Town",
     "rajarhat": "Rajarhat",
@@ -37,42 +38,161 @@ location_MAP = {
     "alipore": "Alipore"
 }
 
+# -----------------------------------
+# PRICE CLEANING
+# -----------------------------------
 def clean_price(price):
-    price = price.replace(",", "")
-    
-    # Extract number (handles Lac/Cr roughly)
-    if "Cr" in price:
-        num = float(re.findall(r'\d+\.?\d*', price)[0])
-        return int(num * 10000000)
-    elif "Lac" in price:
-        num = float(re.findall(r'\d+\.?\d*', price)[0])
-        return int(num * 100000)
-    
+
+    if not isinstance(price, str):
+        return None
+
+    price = price.replace(",", "").strip()
+
+    try:
+        if "Cr" in price:
+            num = float(re.findall(r"\d+\.?\d*", price)[0])
+            return int(num * 10000000)
+
+        elif "Lac" in price:
+            num = float(re.findall(r"\d+\.?\d*", price)[0])
+            return int(num * 100000)
+
+    except Exception:
+        return None
+
     return None
 
 
+# -----------------------------------
+# AREA EXTRACTION
+# -----------------------------------
 def extract_sqft(area):
-    match = re.search(r'(\d+)\s*sqft', area)
-    return int(match.group(1)) if match else None
 
+    if not isinstance(area, str):
+        return None
+
+    match = re.search(r"(\d+)\s*sqft", area.lower())
+
+    if match:
+        return int(match.group(1))
+
+    return None
+
+
+# -----------------------------------
+# LOCATION EXTRACTION
+# -----------------------------------
 def extract_location(text):
-    
+
+    if not isinstance(text, str):
+        return None
+
     text = text.lower()
-    
+
     for key, value in location_MAP.items():
         if key in text:
             return value
-    
-    return text
 
+    return None
+
+
+# -----------------------------------
+# LOCATION SCORE
+# -----------------------------------
+def get_location_score(location):
+
+    scores = {
+        "Alipore": 10,
+        "Ballygunge": 10,
+
+        "Salt Lake": 9,
+        "New Town": 9,
+        "Rash Behari Avenue": 9,
+        "Lake Market": 9,
+
+        "Tollygunge": 8,
+        "Kankurgachi": 8,
+        "Bidhan Nagar": 8,
+        "Jadavpur": 8,
+        "Beleghata": 8,
+
+        "Rajarhat": 7,
+        "Behala": 7,
+        "Garia": 7,
+        "VIP Nagar": 7,
+        "Chinar Park": 7,
+        "Shyambazar": 7,
+        "Sealdah": 7,
+
+        "Dum Dum": 6,
+        "Nayabad": 6,
+        "Bijoygarh": 6,
+        "Intally": 6,
+        "Tiljala": 6,
+        "Haridevpur": 6,
+
+        "Barasat": 5,
+        "Howrah": 5,
+        "Sodepur": 5,
+        "Sonarpur": 5,
+        "Madhyamgram": 5,
+        "Belgharia": 5,
+        "Barrackpore": 5,
+    }
+
+    return scores.get(location, 4)
+
+
+# -----------------------------------
+# LIVABILITY SCORE
+# -----------------------------------
+def compute_livability(row):
+
+    distances = [
+        row["metro_distance_km"],
+        row["railway_distance_km"],
+        row["bus_stop_distance_km"],
+        row["hospital_distance_km"],
+        row["school_distance_km"],
+        row["college_distance_km"],
+        row["police_distance_km"],
+        row["postoffice_distance_km"],
+    ]
+
+    distances = [
+        d for d in distances
+        if d is not None and not math.isnan(d)
+    ]
+
+    if not distances:
+        return 0
+
+    avg_dist = sum(distances) / len(distances)
+
+    score = 10 * (1 / (1 + avg_dist / 2))
+
+    return round(score, 2)
+
+
+# -----------------------------------
+# MAIN CLEANER
+# -----------------------------------
 def clean_data(df):
+
     df["price"] = df["price"].apply(clean_price)
     df["sqft"] = df["area"].apply(extract_sqft)
     df["location"] = df["location_text"].apply(extract_location)
 
-    # ✅ Only drop critical fields
-    df = df.dropna(subset=["price", "sqft"])
+    # Keep only valid locations
+    df = df.dropna(
+        subset=[
+            "price",
+            "sqft",
+            "location"
+        ]
+    )
 
+    # Temporary geo placeholders
     df["metro_distance_km"] = 5
     df["hospital_distance_km"] = 5
     df["school_distance_km"] = 5
@@ -82,111 +202,53 @@ def clean_data(df):
     df["police_distance_km"] = 5
     df["postoffice_distance_km"] = 5
 
-    print("DEBUG LOCATIONS:")
-    print(df["location"].unique())
-    
-    # --- OTHER FEATURES ---
-    ###df["price_per_sqft"] = df["price"] / df["sqft"]
-    
-    df["location_score"] = df["location"].apply(get_location_score)
+    df["location_score"] = df["location"].apply(
+        get_location_score
+    )
 
-    df["livability_score"] = df.apply(compute_livability, axis=1)
+    df["livability_score"] = df.apply(
+        compute_livability,
+        axis=1
+    )
+
+    print("\nDEBUG LOCATIONS:")
+    print(sorted(df["location"].unique()))
+
+    print("\nTOTAL CLEAN ROWS:")
+    print(len(df))
 
     return df
 
-def get_location_score(location):
-    """
-    Returns a score from 10 to 5 based on the cost of living 
-    for specific locations in Kolkata.
-    """
-    scores = {
-        # Category 10: Elite residential hubs
-        "Alipore": 10, 
-        "Ballygunge": 10,
 
-        # Category 9: Planned townships and prime South Kolkata
-        "Salt Lake": 9, 
-        "New Town": 9, 
-        "Rash Behari Avenue": 9, 
-        "Lake Market": 9,
-
-        # Category 8: Established residential with high demand
-        "Tollygunge": 8, 
-        "Kankurgachi": 8, 
-        "Bidhan Nagar": 8, 
-        "Jadavpur": 8, 
-        "Beleghata": 8,
-
-        # Category 7: Popular residential zones
-        "Rajarhat": 7, 
-        "Behala": 7, 
-        "Garia": 7, 
-        "VIP Nagar": 7, 
-        "Chinar Park": 7, 
-        "Shyambazar": 7, 
-        "Sealdah": 7,
-
-        # Category 6: Emerging or high-density residential
-        "Dum Dum": 6, 
-        "Nayabad": 6, 
-        "Bijoygarh": 6, 
-        "Intally": 6, 
-        "Tiljala": 6, 
-        "Haridevpur": 6,
-        
-        # Category 5: Extended suburbs and budget-friendly zones
-        "Barasat": 5,
-        "Howrah": 5,
-        "Sodepur": 5,
-        "Sonarpur": 5,
-        "Madhyamgram": 5,
-        "Belgharia": 5,
-        "Barrackpore": 5
-    }
-
-    # Returns the score if found, otherwise defaults to 4
-    return scores.get(location, 4)
-
-def compute_livability(row):
-    distances = [
-        row["metro_distance_km"],
-        row["railway_distance_km"],
-        row["bus_stop_distance_km"],
-        row["hospital_distance_km"],
-        row["school_distance_km"],
-        row["college_distance_km"],
-        row["police_distance_km"],
-        row["postoffice_distance_km"]
-    ]
-
-    # Remove None values
-    distances = [d for d in distances if d is not None and not math.isnan(d)]
-
-
-    if not distances:
-        return 0
-
-    avg_dist = sum(distances) / len(distances)
-
-    # NORMALIZED SCORING
-    score = 10 * (1 / (1 + avg_dist / 2))
-
-    return round(score, 2)
-
+# -----------------------------------
+# TEST RUN
+# -----------------------------------
 if __name__ == "__main__":
+
     import pandas as pd
     from sqlalchemy import create_engine
 
-    print("🔄 Loading data from DB...")
+    print("Loading data...")
 
-    engine = create_engine("sqlite:///data/real_estate.db")
-    df = pd.read_sql("SELECT * FROM properties", engine)
+    engine = create_engine(
+        "sqlite:///data/real_estate.db"
+    )
 
-    print("📊 Raw rows:", len(df))
+    df = pd.read_sql(
+        "SELECT * FROM properties",
+        engine
+    )
+
+    print("Raw rows:", len(df))
 
     df_clean = clean_data(df)
-    df_clean.to_sql("properties", engine, if_exists="replace", index=False)
 
-    print("✅ Cleaned rows:", len(df_clean))
-    print(df_clean.head())
+    df_clean.to_sql(
+        "properties",
+        engine,
+        if_exists="replace",
+        index=False
+    )
+
+    print("Clean rows:", len(df_clean))
     print(df_clean.head())

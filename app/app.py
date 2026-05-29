@@ -181,7 +181,13 @@ else:
     feature_cols = ["sqft", "location_score", "livability_score", "price"]
 
     # Copy dataset
-    df_rec = df.copy()
+    df_rec = df[
+        df["title"].str.contains(
+            "flat|apartment|bhk",
+            case=False,
+            na=False
+        )
+    ].copy()
     df_rec = df_rec.dropna(subset=feature_cols)
 
     # -----------------------
@@ -233,7 +239,7 @@ else:
     for _ in range(30):
         noisy = input_data.copy()
         noisy["sqft"] *= np.random.uniform(0.9, 1.1)
-        samples.append(model.predict(noisy)[0])
+        samples.append(np.expm1(model.predict(noisy)[0]))
 
     low = np.percentile(samples, 10)
     high = np.percentile(samples, 90)

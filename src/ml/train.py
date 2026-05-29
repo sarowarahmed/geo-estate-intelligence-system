@@ -16,6 +16,18 @@ df = pd.read_sql("SELECT * FROM properties", engine)
 
 print("Data shape:", df.shape)
 
+print(
+    df[
+        [
+            "metro_distance_km",
+            "hospital_distance_km",
+            "school_distance_km",
+            "college_distance_km",
+            "bus_stop_distance_km"
+        ]
+    ].describe()
+)
+
 # ---------------------------
 # FEATURE SELECTION
 # ---------------------------
