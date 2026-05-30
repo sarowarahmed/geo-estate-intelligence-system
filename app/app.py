@@ -34,6 +34,7 @@ st.title("🏠 AI Real Estate Intelligence System")
 # LOAD MODEL + DATA
 # -----------------------
 model = joblib.load(model_PATH)
+st.write("Model loaded:", model_PATH)
 engine = create_engine(db_PATH)
 df = pd.read_sql("SELECT * FROM properties", engine)
 
@@ -170,6 +171,13 @@ else:
     # -----------------------
     prediction = np.expm1(model.predict(input_data))[0]
     st.metric("💰 Predicted Price", f"₹{int(prediction):,}")
+    raw_pred = model.predict(input_data)[0]
+
+    st.write("RAW PRED:", raw_pred)
+
+    prediction = np.expm1(raw_pred)
+
+    st.write("FINAL PRED:", prediction)
 
     # -----------------------
     # SMART RECOMMENDATION ENGINE
