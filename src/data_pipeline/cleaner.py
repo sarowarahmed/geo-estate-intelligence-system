@@ -1,5 +1,9 @@
 import re
 import math
+from .geo_features import (
+    get_distance_to_metro,
+    get_geo_features
+)
 
 # -----------------------------------
 # LOCATION MAP
@@ -183,6 +187,16 @@ def clean_data(df):
     df["sqft"] = df["area"].apply(extract_sqft)
     df["location"] = df["location_text"].apply(extract_location)
 
+    geo_data = df["location"].apply(get_geo_features)
+
+    geo_df = pd.DataFrame(list(geo_data))
+
+    df = pd.concat(
+        [df.reset_index(drop=True),
+        geo_df.reset_index(drop=True)],
+        axis=1
+    )
+
     # Keep only valid locations
     df = df.dropna(
         subset=[
@@ -193,15 +207,15 @@ def clean_data(df):
     )
 
     # Temporary geo placeholders
-    df["metro_distance_km"] = 5
-    df["hospital_distance_km"] = 5
-    df["school_distance_km"] = 5
-    df["college_distance_km"] = 5
-    df["bus_stop_distance_km"] = 5
-    df["railway_distance_km"] = 5
-    df["police_distance_km"] = 5
-    df["postoffice_distance_km"] = 5
-
+#    df["metro_distance_km"] = 5
+#    df["hospital_distance_km"] = 5
+#    df["school_distance_km"] = 5#
+#    df["college_distance_km"] = 5
+#    df["bus_stop_distance_km"] = 5
+#    df["railway_distance_km"] = 5
+#    df["police_distance_km"] = 5
+#    df["postoffice_distance_km"] = 5
+#
     df["location_score"] = df["location"].apply(
         get_location_score
     )
@@ -251,4 +265,4 @@ if __name__ == "__main__":
     )
 
     print("Clean rows:", len(df_clean))
-    print(df_clean.head())
+    print(df_clean.head())#

@@ -144,3 +144,22 @@ def get_distance_to_metro(location):
         min_distance = min(min_distance, dist)
 
     return round(min_distance, 2)
+
+def get_geo_features(location):
+    
+    metro = get_distance_to_metro(location)
+
+    if metro is None:
+        metro = 5
+
+    return {
+        "metro_distance_km": metro,
+
+        "hospital_distance_km": max(0.5, metro * 1.2),
+        "school_distance_km": max(0.5, metro * 0.8),
+        "college_distance_km": max(0.5, metro * 1.1),
+        "bus_stop_distance_km": max(0.2, metro * 0.5),
+        "railway_distance_km": max(0.5, metro * 1.3),
+        "police_distance_km": max(0.5, metro * 1.0),
+        "postoffice_distance_km": max(0.5, metro * 1.1),
+    }
