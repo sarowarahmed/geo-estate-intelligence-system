@@ -39,7 +39,8 @@ location_MAP = {
     "bidhan nagar": "Bidhan Nagar",
     "tollygunge": "Tollygunge",
     "ballygunge": "Ballygunge",
-    "alipore": "Alipore"
+    "alipore": "Alipore",
+    "chiria more":"Chiria More"
 }
 
 # -----------------------------------
@@ -134,6 +135,7 @@ def get_location_score(location):
         "Intally": 6,
         "Tiljala": 6,
         "Haridevpur": 6,
+        "Chiria More":6
 
         "Barasat": 5,
         "Howrah": 5,
