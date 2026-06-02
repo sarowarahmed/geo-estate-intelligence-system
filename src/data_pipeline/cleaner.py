@@ -107,46 +107,250 @@ def extract_location(text):
 def get_location_score(location):
 
     scores = {
+        # ==========================================
+        # TIER 10: ULTRA LUXURY & PRIME COMMERCIAL CORRIDORS (> ₹12,500/sq.ft)
+        # ==========================================
         "Alipore": 10,
         "Ballygunge": 10,
+        "Park Street": 10,
+        "Elgin Road": 10,
+        "Minto Park": 10,
+        "Camac Street": 10,
+        "Loudon Street": 10,
+        "Ballygunge Circular Road": 10,
+        "Salt Lake": 10,
 
-        "Salt Lake": 9,
-        "New Town": 9,
+        # ==========================================
+        # TIER 9: HIGH-END POSH CORE (₹10,000 - ₹12,500/sq.ft)
+        # ==========================================
+        "New Alipore": 9,
+        "Bhowanipore": 9,
         "Rash Behari Avenue": 9,
         "Lake Market": 9,
+        "Gariahat": 9,
+        "Prince Anwar Shah Road": 9,
+        "EM Bypass (Ruby to Science City)": 9,
+        "Science City Area": 9,
+        "Kalighat": 9,
+        "Golpark": 9,
+        "Foreshore Road": 9,
 
-        "Tollygunge": 8,
+        # ==========================================
+        # TIER 8: PREMIUM INNER SUBURBS & TECH HUBS (₹8,500 - ₹10,000/sq.ft)
+        # ==========================================
+        "New Town": 8,
+        "Salt Lake Sector V": 8,
+        "Shankhmani / Newtown Action Area III": 8,
         "Kankurgachi": 8,
         "Bidhan Nagar": 8,
-        "Jadavpur": 8,
-        "Beleghata": 8,
+        "Dhakuria": 8,
+        "Chakgaria": 8,
+        "Golf Green": 8,
+        "Santoshpur": 8,
+        "Chingrighata": 8,
 
-        "Rajarhat": 7,
-        "Behala": 7,
-        "Garia": 7,
-        "VIP Nagar": 7,
-        "Chinar Park": 7,
+        # ==========================================
+        # TIER 7: ESTABLISHED MODERN NODES (₹7,000 - ₹8,500/sq.ft)
+        # ==========================================
+        "Tollygunge": 7,
+        "Jadavpur": 7,
+        "Kasba": 7,
+        "Ruby Connector": 7,
+        "Anandapur": 7,
+        "Phoolbagan": 7,
+        "Lake Town": 7,
+        "Bangur Avenue": 7,
         "Shyambazar": 7,
+        "Hatibagan": 7,
         "Sealdah": 7,
+        "Panchasayer": 7,
+        "Shibpur": 7,
 
-        "Dum Dum": 6,
-        "Nayabad": 6,
-        "Bijoygarh": 6,
-        "Intally": 6,
-        "Tiljala": 6,
-        "Haridevpur": 6,
-        "Chiria More":6
+        # ==========================================
+        # TIER 6: MID-MARKET CORE & PRIME COMMUTER LOCALITIES (₹6,000 - ₹7,000/sq.ft)
+        # ==========================================
+        "Beleghata": 6,
+        "Chetla": 6,
+        "Maniktala": 6,
+        "Ultadanga": 6,
+        "Mukundapur": 6,
+        "Patuli": 6,
+        "Haltu": 6,
+        "Garfa": 6,
+        "Tangra": 6,
+        "Topsia": 6,
+        "Chinar Park": 6,
+        "Chinar Park Crossroad": 6,
+        "VIP Nagar": 6,
+        "Kestopur": 6,
+        "Baguiati": 6,
+        "Teghoria": 6,
+        "Haldiram": 6,
+        "Kaikhali": 6,
+        "Kalikapur": 6,
+        "Ramrajatala": 6,
 
-        "Barasat": 5,
+        # ==========================================
+        # TIER 5: POPULAR URBAN POCKETS & TRANSIT HUBS (₹5,000 - ₹6,000/sq.ft)
+        # ==========================================
+        "Rajarhat": 5,
+        "Behala": 5,
+        "Garia": 5,
+        "Garia Station Area": 5,
+        "Kamalgazi": 5,
+        "Bansdroni": 5,
+        "Kudghat": 5,
+        "Regent Park": 5,
+        "Naktala": 5,
+        "Baghajatin": 5,
+        "Picnic Garden": 5,
+        "Intally": 5,
+        "Tiljala": 5,
+        "Parnasree Pally": 5,
+        "Haridevpur": 5,
+        "Bijoygarh": 5,
+        "Paikpara": 5,
+        "Chiria More": 5,
+        "Sinthi More": 5,
+        "Nagerbazar": 5,
+        "Amherst Street Area": 5,
+        "Gora Bazar": 5,
+        "Airport Area": 5,
+        "Jessore Road (Airport Side)": 5,
+        "Kavi Nazrul (Metro Periphery)": 5,
         "Howrah": 5,
-        "Sodepur": 5,
-        "Sonarpur": 5,
-        "Madhyamgram": 5,
-        "Belgharia": 5,
-        "Barrackpore": 5,
+        "Kadamtala": 5,
+        "Baranagar": 5,
+
+        # ==========================================
+        # TIER 4: AFFORDABLE CITY CORE & GROWING SUBURBS (₹4,200 - ₹5,000/sq.ft)
+        # ==========================================
+        "Thakurpukur": 4,
+        "Sarsuna": 4,
+        "Taratala": 4,
+        "Cossipore": 4,
+        "Dum Dum": 4,
+        "Nayabad": 4,
+        "Narendrapur": 4,
+        "Mahamayatala": 4,
+        "Ukhila": 4,
+        "Joka": 4,
+        "Pailan": 4,
+        "Madhyamgram": 4,
+        "Madhyamgram Chowmatha": 4,
+        "Sodpur Road (Madhyamgram)": 4,
+        "Barasat": 4,
+        "Michael Nagar": 4,
+        "New Barrackpore": 4,
+        "Birati": 4,
+        "Hridaypur": 4,
+        "Sodepur": 4,
+        "Belgharia": 4,
+        "Agarpara": 4,
+        "Panihati": 4,
+        "Kamarhati": 4,
+        "Ariadaha": 4,
+        "Dakshineswar": 4,
+        "Satgachhi": 4,
+        "Jawpur": 4,
+        "Batanagar": 4,
+        "Maheshtala": 4,
+        "Santragachi": 4,
+        "Shalimar": 4,
+        "Liluah": 4,
+        "Salkia": 4,
+        "Dasnagar": 4,
+        "Ichapur (Howrah)": 4,
+        "Uttarpara": 4,
+        "Konnagar": 4,
+        "Serampore": 4,
+        "Serampore Riverfront": 4,
+        "Makhla": 4,
+        "Nabagram": 4,
+
+        # ==========================================
+        # TIER 3: SUBURBAN RAIL CORRIDORS & EXTENDED GROWTH PATHS (₹3,500 - ₹4,200/sq.ft)
+        # ==========================================
+        "Sonarpur": 3,
+        "Rajpur": 3,
+        "Harinavi": 3,
+        "Boral": 3,
+        "Elachi": 3,
+        "Subhasgram": 3,
+        "Mallikpur": 3,
+        "Nangi": 3,
+        "Barrackpore": 3,
+        "Nona Chandanpukur": 3,
+        "Khardah": 3,
+        "Titagarh": 3,
+        "Shyamnagar": 3,
+        "Mourigram": 3,
+        "Andul": 3,
+        "Kona Expressway Corridor": 3,
+        "Bankra": 3,
+        "Hindmotor": 3,
+        "Rishra": 3,
+        "Baidyabati": 3,
+        "Sheoraphuli": 3,
+        "Chandannagar": 3,
+        "Mankundu": 3,
+        "Chinsurah": 3,
+        "Chinsurah Raghunathpur": 3,
+        "Bandel": 3,
+        "Kalyani Expressway Corridor": 3,
+
+        # ==========================================
+        # TIER 2: MAJOR INDUSTRIAL-RESIDENTIAL MIX HUBS (₹2,800 - ₹3,500/sq.ft)
+        # ==========================================
+        "Baruipur": 2,
+        "Govindapur (South)": 2,
+        "Langalberia": 2,
+        "Amtala": 2,
+        "Bishnupur (South)": 2,
+        "Budge Budge": 2,
+        "Naihati": 2,
+        "Kanchrapara": 2,
+        "Halisahar": 2,
+        "Badu": 2,
+        "Badu Road (Barasat)": 2,
+        "Nilganj": 2,
+        "Laskarhat": 2,
+        "Domjur": 2,
+        "Nibra": 2,
+        "Salap": 2,
+        "Ankurhati": 2,
+        "Lilua (Jalan Industrial Complex Area)": 2,
+        "Bally Durgapur": 2,
+        "Bally": 2,
+        "Belur": 2,
+        "Sankrail": 2,
+        "Dankuni": 2,
+        "Dankuni Housing Complex Area": 2,
+        "Raghunathpur (Hooghly)": 2,
+        "Baigachhi": 2,
+        "Telenipara": 2,
+        "Sugandha": 2,
+        "Delhi Road Corridor (Hooghly)": 2,
+        "Bantala (IT SEZ Area)": 2,
+        "Hatisala": 2,
+        "Nandakumarpur / Diamond Harbour Rd": 2,
+
+        # ==========================================
+        # TIER 1: PERIPHERAL HORIZONS & PRIMARY INVESTMENT HORIZONS (< ₹2,800/sq.ft)
+        # ==========================================
+        "Habra": 1,
+        "Ashoknagar": 1,
+        "Dutta Pukur": 1,
+        "Ghatakpukur (Basanti Highway)": 1,
+        "Bhangar": 1,
+        "Champahati": 1,
+        "Sirakol": 1,
+        "Uluberia": 1,
+        "Bagnan": 1,
+        "Singur": 1
     }
 
-    return scores.get(location, 4)
+    return scores.get(location, 0)
 
 
 # -----------------------------------
@@ -211,7 +415,7 @@ def clean_data(df):
     # Temporary geo placeholders
 #    df["metro_distance_km"] = 5
 #    df["hospital_distance_km"] = 5
-#    df["school_distance_km"] = 5#
+#    df["school_distance_km"] = 5
 #    df["college_distance_km"] = 5
 #    df["bus_stop_distance_km"] = 5
 #    df["railway_distance_km"] = 5
