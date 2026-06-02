@@ -23,7 +23,10 @@ print(
             "hospital_distance_km",
             "school_distance_km",
             "college_distance_km",
-            "bus_stop_distance_km"
+            "bus_stop_distance_km",
+            "railway_distance_km",
+            "police_distance_km",
+            "postoffice_distance_km"
         ]
     ].describe()
 )
