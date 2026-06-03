@@ -1,6 +1,15 @@
 import sys
 import os
 
+@st.cache_resource
+def load_explainer():
+    return shap.Explainer(
+        model,
+        df[features_PATH]
+    )
+
+explainer = load_explainer()
+
 # Add project root to Python path
 root_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(root_DIR)
@@ -55,23 +64,45 @@ def get_lat_lon(location):
 # HEATMAP DATA
 # -----------------------
 @st.cache_data
-def prepare_heatmap_data(df):
+def prepare_intelligence_heatmap(df):
+
+    grouped = (
+        df.groupby("location")
+        .agg({
+            "price": "mean",
+            "location_score": "mean",
+            "livability_score": "mean",
+            "metro_distance_km": "mean"
+        })
+        .reset_index()
+    )
+
     heatmap_data = []
 
-    grouped = df.groupby("location")["price"].mean().reset_index()
-
     for _, row in grouped.iterrows():
+
         lat, lon = get_lat_lon(row["location"])
-        if lat and lon:
-            heatmap_data.append({
-                "lat": lat,
-                "lon": lon,
-                "price": row["price"]
-            })
+
+        if lat is None:
+            continue
+
+        intelligence_score = (
+            row["location_score"] * 0.4 +
+            row["livability_score"] * 0.3 +
+            (10 - min(row["metro_distance_km"], 10)) * 0.3
+        )
+
+        heatmap_data.append({
+            "location": row["location"],
+            "lat": lat,
+            "lon": lon,
+            "avg_price": row["price"],
+            "intelligence_score": intelligence_score
+        })
 
     return pd.DataFrame(heatmap_data)
 
-#heatmap_df = prepare_heatmap_data(df)
+heatmap_df = prepare_intelligence_heatmap(df)
 
 # -----------------------
 # SIDEBAR INPUT
@@ -99,29 +130,40 @@ map_data = st_folium(m, width=700, height=500)
 # -----------------------
 # HEATMAP UI
 # -----------------------
-#st.subheader("📊 Kolkata Price Heatmap")
+st.subheader("🌡️ Kolkata Real Estate Intelligence Heatmap")
 
-#if not heatmap_df.empty:
-#    layer = pdk.Layer(
-#        "HeatmapLayer",
-#        data=heatmap_df,
-#        get_position='[lon, lat]',
-#        get_weight="price",
-#        radiusPixels=60,
-#    )
+if not heatmap_df.empty:
 
-#    view_state = pdk.ViewState(
-#        latitude=22.57,
-#        longitude=88.36,
-#        zoom=10,
-#    )
+    layer = pdk.Layer(
+        "ScatterplotLayer",
+        data=heatmap_df,
+        get_position='[lon, lat]',
+        get_radius="intelligence_score * 1500",
+        get_fill_color="[255, 140, 0, 160]",
+        pickable=True
+    )
 
-#    st.pydeck_chart(pdk.Deck(
-#        layers=[layer],
-#        initial_view_state=view_state,
-#    ))
-#else:
-#    st.warning("No heatmap data available")'''
+    tooltip = {
+        "html": """
+        <b>{location}</b><br/>
+        Avg Price: ₹{avg_price}<br/>
+        Intelligence Score: {intelligence_score}
+        """
+    }
+
+    view_state = pdk.ViewState(
+        latitude=22.57,
+        longitude=88.36,
+        zoom=10
+    )
+
+    st.pydeck_chart(
+        pdk.Deck(
+            layers=[layer],
+            initial_view_state=view_state,
+            tooltip=tooltip
+        )
+    )
 
 # -----------------------
 # WAIT FOR MAP CLICK
@@ -149,13 +191,31 @@ else:
     police_distance = geo_data.get("police", 5)
     postoffice_distance = geo_data.get("post_office", 5)
 
+    livability_score = round(
+        10 * (
+            1 / (
+                1 + (
+                    metro_distance +
+                    hospital_distance +
+                    school_distance +
+                    college_distance +
+                    bus_distance +
+                    railway_distance +
+                    police_distance +
+                    postoffice_distance
+                ) / 8 / 2
+            )
+        ),
+        2
+    )
+    
     # -----------------------
     # BUILD INPUT
     # -----------------------
     input_data = pd.DataFrame([{
         "sqft": sqft,
         "location_score": location_score,
-        "livability_score": 5,
+        "livability_score": livability_score,
         "metro_distance_km": metro_distance,
         "hospital_distance_km": hospital_distance,
         "school_distance_km": school_distance,
@@ -169,15 +229,13 @@ else:
     # -----------------------
     # PREDICTION
     # -----------------------
-    prediction = np.expm1(model.predict(input_data))[0]
-    st.metric("💰 Predicted Price", f"₹{int(prediction):,}")
     raw_pred = model.predict(input_data)[0]
-
-    st.write("RAW PRED:", raw_pred)
-
     prediction = np.expm1(raw_pred)
 
-    st.write("FINAL PRED:", prediction)
+    st.metric(
+        "💰 Predicted Price",
+        f"₹{int(prediction):,}"
+    )
 
     # -----------------------
     # SMART RECOMMENDATION ENGINE
@@ -186,7 +244,14 @@ else:
 
     st.subheader("🤖 Recommended Properties")
 
-    feature_cols = ["sqft", "location_score", "livability_score", "price"]
+    feature_cols = [
+    "sqft",
+    "location_score",
+    "livability_score",
+    "metro_distance_km",
+    "hospital_distance_km"
+
+]
 
     # Copy dataset
     df_rec = df[
@@ -203,24 +268,31 @@ else:
     # -----------------------
     df_rec_weighted = df_rec.copy()
 
+    #df_rec_weighted["price"] *= 1.0
     df_rec_weighted["sqft"] *= 0.5
-    df_rec_weighted["price"] *= 1.0
     df_rec_weighted["location_score"] *= 2.0
     df_rec_weighted["livability_score"] *= 2.0
+    df_rec_weighted["metro_distance_km"] *= 1.5
+    df_rec_weighted["hospital_distance_km"] *= 1.2
 
     # Input vector
     input_vector = pd.DataFrame([{
         "sqft": sqft,
         "location_score": location_score,
-        "livability_score": 5,
-        "price": prediction
+        "livability_score": livability_score,
+        "metro_distance_km": metro_distance,
+        "hospital_distance_km": hospital_distance
     }])
 
     # Apply same weights to input
+
+    #input_vector["price"] *= 1.0
+
     input_vector["sqft"] *= 0.5
-    input_vector["price"] *= 1.0
     input_vector["location_score"] *= 2.0
     input_vector["livability_score"] *= 2.0
+    input_vector["metro_distance_km"] *= 1.5
+    input_vector["hospital_distance_km"] *= 1.2
 
     # -----------------------
     # DISTANCE CALCULATION
@@ -268,12 +340,36 @@ else:
         "🚓 Police (km)": police_distance,
     })
 
+    st.subheader("🧠 Location Intelligence Report")
+
+    if livability_score >= 8:
+        grade = "A+"
+    elif livability_score >= 6:
+        grade = "A"
+    elif livability_score >= 4:
+        grade = "B"
+    else:
+        grade = "C"
+
+    if metro_distance < 1:
+        metro_rating = "Excellent"
+    elif metro_distance < 3:
+        metro_rating = "Good"
+    else:
+        metro_rating = "Average"
+
+    st.success(f"🏆 Investment Grade: {grade}")
+    st.write(f"🌿 Livability Score: {livability_score}/10")
+    st.write(f"🚇 Metro Access: {metro_rating}")
+    st.write(f"🏥 Hospital Distance: {hospital_distance:.2f} km")
+    st.write(f"🎓 Education Access: {school_distance:.2f} km")
+
     # -----------------------
     # SHAP
     # -----------------------
     st.subheader("🎯 Explainability")
 
-    explainer = shap.Explainer(model, df[features_PATH])
+    #explainer = shap.Explainer(model, df[features_PATH])
     shap_values_full = explainer(df[features_PATH])
     shap_values_input = explainer(input_data)
 
