@@ -9,7 +9,7 @@ def scrape_magicbricks():
         page = browser.new_page()
 
         # 🔥 LOOP THROUGH MULTIPLE PAGES
-        for page_num in range(1, 50):   # 👈 CHANGE HERE (can increase later)
+        for page_num in range(1, 101):   # 👈 CHANGE HERE (can increase later)
             print(f"\n📄 Scraping page {page_num}...")
 
             url = f"https://www.magicbricks.com/property-for-sale/residential-real-estate?cityName=Kolkata&page={page_num}"
