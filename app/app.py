@@ -284,12 +284,12 @@ else:
     df_rec_weighted["livability_score"] *= 2.0
     df_rec_weighted["metro_distance_km"] *= 1.5
     df_rec_weighted["hospital_distance_km"] *= 1.2
-    df_rec_weighted["college_distance_km"] *= 
-    df_rec_weighted["school_distance_km"] *=
-    df_rec_weighted["railway_distance_km"] *= 
-    df_rec_weighted["bus_stop_distance_km"] *=
-    df_rec_weighted["police_distance_km"] *= 
-    df_rec_weighted["postoffice_distance_km"] *=
+    df_rec_weighted["college_distance_km"] *= 1.3
+    df_rec_weighted["school_distance_km"] *= 1.1
+    df_rec_weighted["railway_distance_km"] *= 1.4
+    df_rec_weighted["bus_stop_distance_km"] *= 0.8
+    df_rec_weighted["police_distance_km"] *= 1.0
+    df_rec_weighted["postoffice_distance_km"] *= 0.9
 
     # Input vector
     input_vector = pd.DataFrame([{
@@ -315,12 +315,12 @@ else:
     input_vector["livability_score"] *= 2.0
     input_vector["metro_distance_km"] *= 1.5
     input_vector["hospital_distance_km"] *= 1.2
-    input_vector["bus_distance_km"] *= 
-    input_vector["railway_distance_km"] *=
-    input_vector["school_distance_km"] *= 
-    input_vector["college_distance_km"] *= 
-    input_vector["police_distance_km"] *=
-    input_vector["postoffice_distance_km"] *=
+    input_vector["bus_distance_km"] *= 0.8
+    input_vector["railway_distance_km"] *= 1.4
+    input_vector["school_distance_km"] *= 1.1
+    input_vector["college_distance_km"] *= 1.3
+    input_vector["police_distance_km"] *= 1.0
+    input_vector["postoffice_distance_km"] *= 0.9
 
     # -----------------------
     # DISTANCE CALCULATION
