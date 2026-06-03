@@ -79,6 +79,9 @@ scores = cross_val_score(model, X, y, cv=5, scoring="r2")
 print("CV R2 Scores:", scores)
 print("Mean CV R2:", scores.mean())
 
+print(df["location_score"].describe())
+print(df["livability_score"].describe())
+
 # ---------------------------
 # SAVE MODEL
 # ---------------------------
