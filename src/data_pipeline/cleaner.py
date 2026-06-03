@@ -1,5 +1,7 @@
 import re
 import math
+import pandas as pd
+import numpy as np
 from .geo_features import (
     get_distance_to_metro,
     get_geo_features

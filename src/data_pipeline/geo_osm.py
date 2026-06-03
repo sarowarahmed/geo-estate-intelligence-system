@@ -2,52 +2,51 @@ import osmnx as ox
 from geopy.distance import geodesic
 from functools import lru_cache
 
-# -----------------------------
-# CORE FUNCTION (MAIN ENTRY)
-# -----------------------------
-@lru_cache(maxsize=100)
-def get_nearest_places(lat, lon):
-    """
-    Given latitude & longitude, return distances (in km)
-    to nearby infrastructure using OpenStreetMap.
-    """
 
-    location = (lat, lon)
+# ----------------------------------
+# CONFIG
+# ----------------------------------
 
-    return {
-        "metro": get_distance(location, {"railway": "station"}),
-        "hospital": get_distance(location, {"amenity": "hospital"}),
-        "school": get_distance(location, {"amenity": "school"}),
-        "college": get_distance(location, {"amenity": "college"}),
-        "bus": get_distance(location, {"highway": "bus_stop"}),
-        "railway": get_distance(location, {"railway": "station"}),
-        "police": get_distance(location, {"amenity": "police"}),
-        "post_office": get_distance(location, {"amenity": "post_office"}),
-    }
+SEARCH_RADIUS = 3000  # meters
 
 
-# -----------------------------
-# HELPER: FETCH PLACES
-# -----------------------------
-@lru_cache(maxsize=100)
+# ----------------------------------
+# FETCH NEARBY OSM OBJECTS
+# ----------------------------------
+
+@lru_cache(maxsize=500)
 def fetch_places(lat, lon, tag_key, tag_value):
     """
-    Fetch nearby places from OSM within 3km radius
+    Fetch nearby OSM locations
     """
+
     try:
         tags = {tag_key: tag_value}
 
-        gdf = ox.geometries_from_point(
+        gdf = ox.features_from_point(
             (lat, lon),
-            tags,
-            dist=3000
+            tags=tags,
+            dist=SEARCH_RADIUS
         )
 
         points = []
 
         for _, row in gdf.iterrows():
-            if row.geometry.geom_type == "Point":
-                points.append((row.geometry.y, row.geometry.x))
+
+            geom = row.geometry
+
+            if geom is None:
+                continue
+
+            if geom.geom_type == "Point":
+                points.append(
+                    (geom.y, geom.x)
+                )
+
+            elif geom.centroid:
+                points.append(
+                    (geom.centroid.y, geom.centroid.x)
+                )
 
         return points
 
@@ -55,26 +54,107 @@ def fetch_places(lat, lon, tag_key, tag_value):
         return []
 
 
-# -----------------------------
-# HELPER: DISTANCE CALCULATION
-# -----------------------------
-def get_distance(origin, tags):
-    """
-    Calculate minimum distance to nearest place
-    """
+# ----------------------------------
+# DISTANCE TO NEAREST LOCATION
+# ----------------------------------
+
+def get_distance(origin, tag_key, tag_value):
+
     lat, lon = origin
 
-    key, value = list(tags.items())[0]
-
-    places = fetch_places(lat, lon, key, value)
+    places = fetch_places(
+        lat,
+        lon,
+        tag_key,
+        tag_value
+    )
 
     if not places:
-        return 5  # fallback
+        return 5.0
 
-    min_dist = float("inf")
-
-    for place in places:
-        dist = geodesic((lat, lon), place).km
-        min_dist = min(min_dist, dist)
+    min_dist = min(
+        geodesic(
+            (lat, lon),
+            place
+        ).km
+        for place in places
+    )
 
     return round(min_dist, 2)
+
+
+# ----------------------------------
+# MAIN FUNCTION
+# ----------------------------------
+
+@lru_cache(maxsize=500)
+def get_nearest_places(lat, lon):
+    """
+    Returns real infrastructure distances
+    from OpenStreetMap
+    """
+
+    origin = (lat, lon)
+
+    return {
+
+        # Public Transport
+        "metro":
+            get_distance(
+                origin,
+                "station",
+                "subway"
+            ),
+
+        "railway":
+            get_distance(
+                origin,
+                "railway",
+                "station"
+            ),
+
+        "bus":
+            get_distance(
+                origin,
+                "highway",
+                "bus_stop"
+            ),
+
+        # Education
+        "school":
+            get_distance(
+                origin,
+                "amenity",
+                "school"
+            ),
+
+        "college":
+            get_distance(
+                origin,
+                "amenity",
+                "college"
+            ),
+
+        # Healthcare
+        "hospital":
+            get_distance(
+                origin,
+                "amenity",
+                "hospital"
+            ),
+
+        # Public Services
+        "police":
+            get_distance(
+                origin,
+                "amenity",
+                "police"
+            ),
+
+        "post_office":
+            get_distance(
+                origin,
+                "amenity",
+                "post_office"
+            )
+    }
