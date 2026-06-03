@@ -109,7 +109,7 @@ locations_COORDS = {
     "Lake Market": (22.5170, 88.3510),
     "Gariahat": (22.5190, 88.3680),
     "Prince Anwar Shah Road": (22.5028, 88.3621),
-    "EM Bypass (Ruby to Science City)": (22.5255, 88.3994),
+    "EM Bypass": (22.5255, 88.3994),
     "Science City Area": (22.5401, 88.3962),
     "Kalighat": (22.5204, 88.3467),
     "Golpark": (22.5164, 88.3664),
@@ -120,7 +120,7 @@ locations_COORDS = {
     # =========================================================================
     "New Town": (22.5750, 88.4786),
     "Salt Lake Sector V": (22.5694, 88.4322),
-    "Shankhmani / Newtown Action Area III": (22.5451, 88.4912),
+    "Shankhmani": (22.5451, 88.4912),
     "Kankurgachi": (22.5790, 88.3890),
     "Bidhan Nagar": (22.5900, 88.3900),
     "Dhakuria": (22.5105, 88.3692),
@@ -196,8 +196,8 @@ locations_COORDS = {
     "Amherst Street Area": (22.5784, 88.3651),
     "Gora Bazar": (22.6251, 88.4112),
     "Airport Area": (22.6421, 88.4435),
-    "Jessore Road (Airport Side)": (22.6481, 88.4315),
-    "Kavi Nazrul (Metro Periphery)": (22.4681, 88.3812),
+    "Jessore Road": (22.6481, 88.4315),
+    "Kavi Nazrul": (22.4681, 88.3812),
     "Howrah": (22.5850, 88.3300),
     "Kadamtala": (22.5842, 88.3115),
     "Baranagar": (22.6415, 88.3694),
@@ -218,13 +218,12 @@ locations_COORDS = {
     "Pailan": (22.4215, 88.2694),
     "Madhyamgram": (22.6900, 88.4500),
     "Madhyamgram Chowmatha": (22.6952, 88.4601),
-    "Sodpur Road (Madhyamgram)": (22.6912, 88.4215),
+    "Sodepur": (22.6912, 88.4215),
     "Barasat": (22.7200, 88.4800),
     "Michael Nagar": (22.6512, 88.4491),
     "New Barrackpore": (22.6842, 88.4312),
     "Birati": (22.6612, 88.4284),
     "Hridaypur": (22.7051, 88.4712),
-    "Sodepur": (22.6950, 88.3830),
     "Belgharia": (22.6570, 88.3850),
     "Agarpara": (22.6804, 88.3782),
     "Panihati": (22.6934, 88.3742),
@@ -331,10 +330,10 @@ locations_COORDS = {
 }
 
 def get_distance_to_metro(location):
-    if location not in location_COORDS:
+    if location not in locations_COORDS:
         return None
 
-    property_coord = location_COORDS[location]
+    property_coord = locations_COORDS[location]
 
     min_distance = float("inf")
 
@@ -354,11 +353,11 @@ def get_geo_features(location):
     return {
         "metro_distance_km": metro,
 
-        "hospital_distance_km": max(0.5, metro * 1.2),
-        "school_distance_km": max(0.5, metro * 0.8),
-        "college_distance_km": max(0.5, metro * 1.1),
-        "bus_stop_distance_km": max(0.2, metro * 0.5),
-        "railway_distance_km": max(0.5, metro * 1.3),
-        "police_distance_km": max(0.5, metro * 1.0),
-        "postoffice_distance_km": max(0.5, metro * 1.1),
+        "hospital_distance_km": round(max(0.5, metro * 1.2), 2),
+        "school_distance_km": round(max(0.5, metro * 0.8), 2),
+        "college_distance_km": round(max(0.5, metro * 1.1), 2),
+        "bus_stop_distance_km": round(max(0.2, metro * 0.5), 2),
+        "railway_distance_km": round(max(0.5, metro * 1.3), 2),
+        "police_distance_km": round(max(0.5, metro * 1.0), 2),
+        "postoffice_distance_km": round(max(0.5, metro * 1.1), 2),
     }
