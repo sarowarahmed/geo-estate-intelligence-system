@@ -1,20 +1,10 @@
 import sys
 import os
 
-@st.cache_resource
-def load_explainer():
-    return shap.Explainer(
-        model,
-        df[features_PATH]
-    )
-
-explainer = load_explainer()
-
 # Add project root to Python path
 root_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.append(root_DIR)
-print("ROOT:", root_DIR)
-print("PATH:", sys.path)
+if root_DIR not in sys.path:
+    sys.path.append(root_DIR)
 
 import streamlit as st
 import pandas as pd
@@ -46,6 +36,19 @@ model = joblib.load(model_PATH)
 st.write("Model loaded:", model_PATH)
 engine = create_engine(db_PATH)
 df = pd.read_sql("SELECT * FROM properties", engine)
+
+# -----------------------
+# SHAP EXPLAINER
+# -----------------------
+
+@st.cache_resource
+def load_explainer():
+    return shap.Explainer(
+        model,
+        df[features_PATH]
+    )
+
+explainer = load_explainer()
 
 # -----------------------
 # GEO SETUP
@@ -138,7 +141,7 @@ if not heatmap_df.empty:
         "ScatterplotLayer",
         data=heatmap_df,
         get_position='[lon, lat]',
-        get_radius="intelligence_score * 1500",
+        get_radius=max(8, min(np.log1p(avg_price) * 2, 25)),
         get_fill_color="[255, 140, 0, 160]",
         pickable=True
     )
@@ -249,7 +252,14 @@ else:
     "location_score",
     "livability_score",
     "metro_distance_km",
-    "hospital_distance_km"
+    "hospital_distance_km",
+    "railway_distance_km",
+    "bus_stop_distance_km",
+    "school_distance_km",
+    "college_distance_km",
+    "police_distance_km",
+    "postoffice_distance_km"
+
 
 ]
 
@@ -274,6 +284,12 @@ else:
     df_rec_weighted["livability_score"] *= 2.0
     df_rec_weighted["metro_distance_km"] *= 1.5
     df_rec_weighted["hospital_distance_km"] *= 1.2
+    df_rec_weighted["college_distance_km"] *= 
+    df_rec_weighted["school_distance_km"] *=
+    df_rec_weighted["railway_distance_km"] *= 
+    df_rec_weighted["bus_stop_distance_km"] *=
+    df_rec_weighted["police_distance_km"] *= 
+    df_rec_weighted["postoffice_distance_km"] *=
 
     # Input vector
     input_vector = pd.DataFrame([{
@@ -281,7 +297,13 @@ else:
         "location_score": location_score,
         "livability_score": livability_score,
         "metro_distance_km": metro_distance,
-        "hospital_distance_km": hospital_distance
+        "hospital_distance_km": hospital_distance,
+        "railway_distance_km": railway_distance,
+        "bus_stop_distance_km": bus_distance,
+        "school_distance_km": school_distance,
+        "college_distance_km": college_distance,
+        "police_distance_km": police_distance,
+        "postoffice_distance_km": postoffice_distance
     }])
 
     # Apply same weights to input
@@ -293,6 +315,12 @@ else:
     input_vector["livability_score"] *= 2.0
     input_vector["metro_distance_km"] *= 1.5
     input_vector["hospital_distance_km"] *= 1.2
+    input_vector["bus_distance_km"] *= 
+    input_vector["railway_distance_km"] *=
+    input_vector["school_distance_km"] *= 
+    input_vector["college_distance_km"] *= 
+    input_vector["police_distance_km"] *=
+    input_vector["postoffice_distance_km"] *=
 
     # -----------------------
     # DISTANCE CALCULATION
@@ -338,6 +366,7 @@ else:
         "🚌 Bus Stop (km)": bus_distance,
         "🚆 Railway (km)": railway_distance,
         "🚓 Police (km)": police_distance,
+        "🏤 Post Office (km)": postoffice_distance
     })
 
     st.subheader("🧠 Location Intelligence Report")
@@ -362,7 +391,12 @@ else:
     st.write(f"🌿 Livability Score: {livability_score}/10")
     st.write(f"🚇 Metro Access: {metro_rating}")
     st.write(f"🏥 Hospital Distance: {hospital_distance:.2f} km")
-    st.write(f"🎓 Education Access: {school_distance:.2f} km")
+    st.write(f"🏫 School Access: {school_distance:.2f} km")
+    st.write(f"🚆 Railway Distance: {railway_distance:.2f} km")
+    st.write(f"🎓 College Access: {college_distance:.2f} km")
+    st.write(f"🚌 Bus Stop Distance: {bus_distance:.2f} km")
+    st.write(f"🚓 Police Station Distance: {police_distance:.2f} km")
+    st.write(f"🏤 Post Office: {postoffice_distance:.2f} km")
 
     # -----------------------
     # SHAP
@@ -370,11 +404,16 @@ else:
     st.subheader("🎯 Explainability")
 
     #explainer = shap.Explainer(model, df[features_PATH])
-    shap_values_full = explainer(df[features_PATH])
+    sample_df = df[features_PATH].sample(
+        min(200, len(df)),
+        random_state=42
+    )
+
+    shap_values_full = explainer(sample_df)
     shap_values_input = explainer(input_data)
 
     fig, ax = plt.subplots()
-    shap.summary_plot(shap_values_full, df[features_PATH], show=False)
+    shap.summary_plot(shap_values_full, sample_df, show=False)
     st.pyplot(fig)
 
     contributions = shap_values_input[0].values
@@ -411,6 +450,9 @@ st.write(
     .sort_values(ascending=False)
     .head(10)
 )
+st.write(input_data)
+st.write("Raw Prediction:", raw_pred)
+st.write("Prediction:", prediction)
 
 fig = px.histogram(df, x="price", nbins=20, title="Price Distribution")
 st.plotly_chart(fig)
