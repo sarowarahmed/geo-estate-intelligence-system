@@ -141,7 +141,7 @@ if not heatmap_df.empty:
         "ScatterplotLayer",
         data=heatmap_df,
         get_position='[lon, lat]',
-        get_radius=max(8, min(np.log1p(avg_price) * 2, 25)),
+        get_radius=max(8, min(np.log1p(sqft) * 2, 25)),
         get_fill_color="[255, 140, 0, 160]",
         pickable=True
     )
