@@ -1,5 +1,6 @@
 import joblib
 import pandas as pd
+import numpy as np
 from fastapi import FastAPI
 from pydantic import BaseModel
 from config.settings import model_PATH
@@ -36,11 +37,29 @@ def predict(data: PropertyInput):
     # Location score
     location_score = get_location_score(data.location)
 
+    livability_score = round(
+        10 * (
+            1 / (
+                1 + (
+                    geo.get("metro", 5)
+                    + geo.get("hospital", 5)
+                    + geo.get("school", 5)
+                    + geo.get("college", 5)
+                    + geo.get("bus", 3)
+                    + geo.get("railway", 5)
+                    + geo.get("police", 5)
+                    + geo.get("post_office", 5)
+                ) / 8 / 2
+            )
+        ),
+        2
+    )
+
     # Build input
     input_df = pd.DataFrame([{
         "sqft": data.sqft,
         "location_score": location_score,
-        "livability_score": 5,
+        "livability_score": livability_score,
         "metro_distance_km": geo.get("metro", 5),
         "hospital_distance_km": geo.get("hospital", 5),
         "school_distance_km": geo.get("school", 5),
@@ -52,7 +71,8 @@ def predict(data: PropertyInput):
     }])
 
     # Prediction
-    prediction = model.predict(input_df)[0]
+    raw_pred = model.predict(input_df)[0]
+    prediction = np.expm1(raw_pred)
 
     return {
         "predicted_price": int(prediction),
