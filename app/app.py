@@ -100,8 +100,16 @@ def prepare_intelligence_heatmap(df):
             "lat": lat,
             "lon": lon,
             "avg_price": row["price"],
-            "intelligence_score": intelligence_score
+            "intelligence_score": intelligence_score,
+            "radius": max(
+                20,
+                min(
+                    intelligence_score * 60,
+                    300
+                )
+            )
         })
+
 
     return pd.DataFrame(heatmap_data)
 
@@ -141,7 +149,7 @@ if not heatmap_df.empty:
         "ScatterplotLayer",
         data=heatmap_df,
         get_position='[lon, lat]',
-        get_radius=max(8, min(np.log1p(sqft) * 2, 25)),
+        get_radius="radius",
         get_fill_color="[255, 140, 0, 160]",
         pickable=True
     )
@@ -184,6 +192,9 @@ else:
     # GEO FEATURES
     # -----------------------
     geo_data = get_nearest_places(lat, lon)
+
+    st.write("GEO DATA")
+    st.json(geo_data)
 
     metro_distance = geo_data.get("metro", 5)
     hospital_distance = geo_data.get("hospital", 5)
@@ -321,7 +332,7 @@ else:
     input_vector["livability_score"] *= 2.0
     input_vector["metro_distance_km"] *= 1.5
     input_vector["hospital_distance_km"] *= 1.2
-    input_vector["bus_distance_km"] *= 0.8
+    input_vector["bus_stop_distance_km"] *= 0.8
     input_vector["railway_distance_km"] *= 1.4
     input_vector["school_distance_km"] *= 1.1
     input_vector["college_distance_km"] *= 1.3
