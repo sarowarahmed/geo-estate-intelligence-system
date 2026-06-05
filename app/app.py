@@ -235,6 +235,12 @@ else:
     raw_pred = model.predict(input_data)[0]
     prediction = np.expm1(raw_pred)
 
+    st.write("INPUT DATA")
+    st.dataframe(input_data)
+
+    st.write("RAW PRED:", raw_pred)
+    st.write("FINAL PRED:", prediction)
+
     st.metric(
         "💰 Predicted Price",
         f"₹{int(prediction):,}"
@@ -450,9 +456,7 @@ st.write(
     .sort_values(ascending=False)
     .head(10)
 )
-st.write(input_data)
-st.write("Raw Prediction:", raw_pred)
-st.write("Prediction:", prediction)
+
 
 fig = px.histogram(df, x="price", nbins=20, title="Price Distribution")
 st.plotly_chart(fig)
