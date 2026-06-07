@@ -361,3 +361,25 @@ def get_geo_features(location):
         "police_distance_km": round(max(0.5, metro * 1.0), 2),
         "postoffice_distance_km": round(max(0.5, metro * 1.1), 2),
     }
+def get_nearest_metro(lat, lon):
+
+    property_coord = (lat, lon)
+
+    nearest_station = None
+    min_distance = float("inf")
+
+    for station, coord in metro_STATIONS.items():
+
+        dist = geodesic(
+            property_coord,
+            coord
+        ).km
+
+        if dist < min_distance:
+            min_distance = dist
+            nearest_station = station
+
+    return {
+        "metro_name": nearest_station,
+        "metro_distance_km": round(min_distance, 2)
+    }
