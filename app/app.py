@@ -229,6 +229,7 @@ if not heatmap_df.empty:
         )
     )
 
+nearby_areas = []
 # -----------------------
 # WAIT FOR MAP CLICK
 # -----------------------
@@ -340,20 +341,18 @@ else:
     st.subheader("🤖 Recommended Properties")
 
     feature_cols = [
-    "sqft",
-    "location_score",
-    "livability_score",
-    "metro_distance_km",
-    "hospital_distance_km",
-    "railway_distance_km",
-    "bus_stop_distance_km",
-    "school_distance_km",
-    "college_distance_km",
-    "police_distance_km",
-    "postoffice_distance_km"
-
-
-]
+        "sqft",
+        "location_score",
+        "livability_score",
+        "metro_distance_km",
+        "hospital_distance_km",
+        "railway_distance_km",
+        "bus_stop_distance_km",
+        "school_distance_km",
+        "college_distance_km",
+        "police_distance_km",
+        "postoffice_distance_km"
+    ]
 
     # Copy dataset
     df_rec = df[
@@ -535,35 +534,36 @@ else:
 # -----------------------
 # GLOBAL INSIGHTS
 # -----------------------
-st.subheader(
-    "📊 Nearby Neighborhood Comparison"
-)
+if nearby_areas:
 
-comparison_rows = []
+    st.subheader(
+        "📊 Nearby Neighborhood Comparison"
+    )
 
-for area, distance in nearby_areas:
+    comparison_rows = []
 
-    area_df = df[
-        df["location"] == area
-    ]
+    for area, distance in nearby_areas:
 
-    if len(area_df) == 0:
-        continue
+        area_df = df[
+            df["location"] == area
+        ]
 
-    avg_price = area_df["price"].mean()
+        if len(area_df) == 0:
+            continue
 
-    comparison_rows.append({
-        "Area": area,
-        "Distance (km)": distance,
-        "Avg Price": int(avg_price)
-    })
+        avg_price = area_df["price"].mean()
 
-comparison_df = pd.DataFrame(
-    comparison_rows
-)
+        comparison_rows.append({
+            "Area": area,
+            "Distance (km)": distance,
+            "Avg Price": int(avg_price)
+        })
 
-st.dataframe(comparison_df)
+    comparison_df = pd.DataFrame(
+        comparison_rows
+    )
 
+    st.dataframe(comparison_df)
 
 fig = px.histogram(df, x="price", nbins=20, title="Price Distribution")
 st.plotly_chart(fig)
