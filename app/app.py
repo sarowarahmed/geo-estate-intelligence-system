@@ -24,6 +24,14 @@ from src.data_pipeline.cleaner import get_location_score
 from sklearn.metrics.pairwise import euclidean_distances
 from geopy.distance import geodesic
 from src.data_pipeline.geo_features import locations_COORDS
+from src.data_pipeline.geo_features import get_nearest_metro
+from src.data_pipeline.location_mapper import (
+    get_nearest_locations
+)
+
+from src.data_pipeline.geo_features import (
+    locations_COORDS
+)
 
 def get_nearest_location(lat, lon):
 
@@ -240,6 +248,13 @@ else:
         nearest_location
     )
 
+    nearby_areas = get_nearest_locations(
+        lat,
+        lon,
+        locations_COORDS,
+        top_n=5
+    )
+
     st.info(
         f"Detected Area: {nearest_location}"
     )
@@ -250,11 +265,13 @@ else:
     # GEO FEATURES
     # -----------------------
     geo_data = get_nearest_places(lat, lon)
+    metro_info = get_nearest_metro(lat, lon)
 
     st.write("GEO DATA")
     st.json(geo_data)
 
-    metro_distance = geo_data.get("metro", 5)
+    metro_distance = metro_info["metro_distance_km"]
+    nearest_metro = metro_info["metro_name"]
     hospital_distance = geo_data.get("hospital", 5)
     school_distance = geo_data.get("school", 5)
     college_distance = geo_data.get("college", 5)
@@ -436,7 +453,7 @@ else:
     # -----------------------
     st.subheader("📍 Nearby Infrastructure")
     st.write({
-        "🚇 Metro (km)": metro_distance,
+        "🚇 Metro (km)": nearest_metro,
         "🏥 Hospital (km)": hospital_distance,
         "🏫 School (km)": school_distance,
         "🎓 College (km)": college_distance,
@@ -467,6 +484,7 @@ else:
     st.success(f"🏆 Investment Grade: {grade}")
     st.write(f"🌿 Livability Score: {livability_score}/10")
     st.write(f"🚇 Metro Access: {metro_rating}")
+    st.write(f"🚇 Nearest Metro: {nearest_metro} ({metro_distance:.2f} km)")
     st.write(f"🏥 Hospital Distance: {hospital_distance:.2f} km")
     st.write(f"🏫 School Access: {school_distance:.2f} km")
     st.write(f"🚆 Railway Distance: {railway_distance:.2f} km")
@@ -517,16 +535,34 @@ else:
 # -----------------------
 # GLOBAL INSIGHTS
 # -----------------------
-st.subheader("📊 Area Insights")
-
-clean_df = df[df["location"].str.len() < 30]
-
-st.write(
-    clean_df.groupby("location")["price"]
-    .mean()
-    .sort_values(ascending=False)
-    .head(10)
+st.subheader(
+    "📊 Nearby Neighborhood Comparison"
 )
+
+comparison_rows = []
+
+for area, distance in nearby_areas:
+
+    area_df = df[
+        df["location"] == area
+    ]
+
+    if len(area_df) == 0:
+        continue
+
+    avg_price = area_df["price"].mean()
+
+    comparison_rows.append({
+        "Area": area,
+        "Distance (km)": distance,
+        "Avg Price": int(avg_price)
+    })
+
+comparison_df = pd.DataFrame(
+    comparison_rows
+)
+
+st.dataframe(comparison_df)
 
 
 fig = px.histogram(df, x="price", nbins=20, title="Price Distribution")
