@@ -22,6 +22,28 @@ import folium
 import pydeck as pdk
 from src.data_pipeline.cleaner import get_location_score
 from sklearn.metrics.pairwise import euclidean_distances
+from geopy.distance import geodesic
+from src.data_pipeline.geo_features import locations_COORDS
+
+def get_nearest_location(lat, lon):
+
+    clicked = (lat, lon)
+
+    nearest_location = None
+    nearest_distance = float("inf")
+
+    for location, coords in locations_COORDS.items():
+
+        dist = geodesic(
+            clicked,
+            coords
+        ).km
+
+        if dist < nearest_distance:
+            nearest_distance = dist
+            nearest_location = location
+
+    return nearest_location
 
 # -----------------------
 # CONFIG
@@ -34,6 +56,29 @@ st.title("🏠 AI Real Estate Intelligence System")
 # -----------------------
 model = joblib.load(model_PATH)
 st.write("Model loaded:", model_PATH)
+st.write(type(model))
+st.write(model)
+st.write("MODEL FEATURES:")
+st.write(model.get_booster().feature_names)
+st.write("N TREES:")
+st.write(model.n_estimators)
+st.write("TEST PREDICTION")
+
+dummy = pd.DataFrame([{
+    "sqft":1200,
+    "location_score":8,
+    "livability_score":5,
+    "metro_distance_km":1,
+    "hospital_distance_km":1,
+    "school_distance_km":1,
+    "college_distance_km":1,
+    "bus_stop_distance_km":1,
+    "railway_distance_km":1,
+    "police_distance_km":1,
+    "postoffice_distance_km":1
+}])
+
+st.write(model.predict(dummy))
 engine = create_engine(db_PATH)
 df = pd.read_sql("SELECT * FROM properties", engine)
 
@@ -128,7 +173,7 @@ selected_location = st.sidebar.selectbox("Choose Area", locations)
 
 # Auto location score (no manual slider)
 selected_location = selected_location.strip()
-location_score = get_location_score(selected_location)
+#location_score = get_location_score(selected_location)
 
 # -----------------------
 # MAP SECTION
@@ -185,6 +230,19 @@ if not map_data or not map_data.get("last_clicked"):
 else:
     lat = map_data["last_clicked"]["lat"]
     lon = map_data["last_clicked"]["lng"]
+
+    nearest_location = get_nearest_location(
+        lat,
+        lon
+    )
+
+    location_score = get_location_score(
+        nearest_location
+    )
+
+    st.info(
+        f"Detected Area: {nearest_location}"
+    )
 
     st.success(f"📍 Selected Location: {lat:.4f}, {lon:.4f}")
 
@@ -288,7 +346,9 @@ else:
             na=False
         )
     ].copy()
-    df_rec = df_rec.dropna(subset=feature_cols)
+    df_rec = df_rec[
+        df_rec["location"] == nearest_location
+    ]
 
     # -----------------------
     # APPLY WEIGHTING (IMPORTANT)
