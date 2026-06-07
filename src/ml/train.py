@@ -41,6 +41,18 @@ df = df.dropna(subset=features + ["price"])
 X = df[features]
 y = np.log1p(df["price"])
 
+print("\nPRICE CHECK")
+print(df["price"].describe())
+
+print("\nLOG PRICE CHECK")
+print(y.describe())
+
+print("\nFIRST 10 PRICES")
+print(df["price"].head(10).tolist())
+
+print("\nFIRST 10 LOG PRICES")
+print(y.head(10).tolist())
+
 # ---------------------------
 # TRAIN TEST SPLIT
 # ---------------------------
