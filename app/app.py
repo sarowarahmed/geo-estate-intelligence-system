@@ -567,7 +567,3 @@ if nearby_areas:
 
 fig = px.histogram(df, x="price", nbins=20, title="Price Distribution")
 st.plotly_chart(fig)
-
-st.subheader("🔁 Compare Properties")
-sample = df.sample(5)
-st.dataframe(sample[["location", "price", "sqft"]])
