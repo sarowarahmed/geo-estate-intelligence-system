@@ -142,23 +142,41 @@ def prepare_intelligence_heatmap(df):
         if lat is None:
             continue
 
-        intelligence_score = (
-            row["location_score"] * 0.4 +
-            row["livability_score"] * 0.3 +
-            (10 - min(row["metro_distance_km"], 10)) * 0.3
+        price_factor = min(
+            row["price"] / 20000000,
+            1
         )
+
+        investment_score = (
+            row["location_score"] * 0.40 +
+            row["livability_score"] * 0.35 +
+            (10 - min(row["metro_distance_km"], 10)) * 0.25
+        ) - (price_factor * 2)
+
+        if investment_score >= 6.5:
+            color = [0, 200, 0, 180]     # Green
+
+        elif investment_score >= 4.5:
+            color = [255, 215, 0, 180]   # Yellow
+
+        else:
+            color = [220, 0, 0, 180]     # Red
 
         heatmap_data.append({
             "location": row["location"],
             "lat": lat,
             "lon": lon,
             "avg_price": row["price"],
-            "intelligence_score": intelligence_score,
+            "investment_score": round(
+                investment_score,
+                2
+            ),
+            "color": color,
             "radius": max(
-                20,
+                40,
                 min(
-                    intelligence_score * 60,
-                    300
+                    investment_score * 35,
+                    250
                 )
             )
         })
@@ -203,7 +221,7 @@ if not heatmap_df.empty:
         data=heatmap_df,
         get_position='[lon, lat]',
         get_radius="radius",
-        get_fill_color="[255, 140, 0, 160]",
+        get_fill_color="color",
         pickable=True
     )
 
@@ -211,7 +229,7 @@ if not heatmap_df.empty:
         "html": """
         <b>{location}</b><br/>
         Avg Price: ₹{avg_price}<br/>
-        Intelligence Score: {intelligence_score}
+        Investment Score: {investment_score}
         """
     }
 
@@ -228,6 +246,46 @@ if not heatmap_df.empty:
             tooltip=tooltip
         )
     )
+
+# =====================================
+# Price Formatting
+# =====================================
+
+def format_price(price):
+
+    if price >= 10000000:
+        return f"₹{price/10000000:.2f} Cr"
+
+    return f"₹{price/100000:.0f} L"
+
+
+# -----------------------
+# TOP INVESTMENT ZONES
+# -----------------------
+st.subheader("🔥 Top Investment Zones")
+
+top_zones = (
+    heatmap_df
+    .sort_values(
+        "investment_score",
+        ascending=False
+    )
+    .head(10)
+)
+top_zones = top_zones.copy()
+top_zones["avg_price"] = (
+    top_zones["avg_price"]
+    .apply(format_price)
+)
+st.dataframe(
+    top_zones[
+        [
+            "location",
+            "investment_score",
+            "avg_price"
+        ]
+    ]
+)
 
 nearby_areas = []
 # -----------------------
