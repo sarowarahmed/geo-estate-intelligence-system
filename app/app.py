@@ -338,7 +338,7 @@ else:
     # -----------------------
     from sklearn.metrics.pairwise import euclidean_distances
 
-    st.subheader("🤖 Recommended Properties")
+    st.subheader("🏆 Best Nearby Investment Opportunities")
 
     feature_cols = [
         "sqft",
@@ -428,10 +428,13 @@ else:
     # Get top matches
     recommendations = df_rec.sort_values("similarity").head(5)
 
-    # Display
-    st.dataframe(
-        recommendations[["location", "price", "sqft", "livability_score"]]
-    )
+    def format_price(price):
+
+        if price >= 10000000:
+             f"₹{price/10000000:.2f} Cr"
+
+        return f"₹{price/100000:.0f} L"
+
 
     # -----------------------
     # CONFIDENCE RANGE
