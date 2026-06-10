@@ -63,14 +63,14 @@ st.title("🏠 AI Real Estate Intelligence System")
 # LOAD MODEL + DATA
 # -----------------------
 model = joblib.load(model_PATH)
-st.write("Model loaded:", model_PATH)
-st.write(type(model))
-st.write(model)
-st.write("MODEL FEATURES:")
-st.write(model.get_booster().feature_names)
-st.write("N TREES:")
-st.write(model.n_estimators)
-st.write("TEST PREDICTION")
+#st.write("Model loaded:", model_PATH)
+#st.write(type(model))
+#st.write(model)
+#st.write("MODEL FEATURES:")
+#st.write(model.get_booster().feature_names)
+#st.write("N TREES:")
+#st.write(model.n_estimators)
+#st.write("TEST PREDICTION")
 
 dummy = pd.DataFrame([{
     "sqft":1200,
@@ -86,7 +86,7 @@ dummy = pd.DataFrame([{
     "postoffice_distance_km":1
 }])
 
-st.write(model.predict(dummy))
+#st.write(model.predict(dummy))
 engine = create_engine(db_PATH)
 df = pd.read_sql("SELECT * FROM properties", engine)
 
@@ -268,8 +268,8 @@ else:
     geo_data = get_nearest_places(lat, lon)
     metro_info = get_nearest_metro(lat, lon)
 
-    st.write("GEO DATA")
-    st.json(geo_data)
+    #st.write("GEO DATA")
+    #st.json(geo_data)
 
     metro_distance = metro_info["metro_distance_km"]
     nearest_metro = metro_info["metro_name"]
@@ -322,11 +322,11 @@ else:
     raw_pred = model.predict(input_data)[0]
     prediction = np.expm1(raw_pred)
 
-    st.write("INPUT DATA")
-    st.dataframe(input_data)
+    #st.write("INPUT DATA")
+    #st.dataframe(input_data)
 
-    st.write("RAW PRED:", raw_pred)
-    st.write("FINAL PRED:", prediction)
+    #st.write("RAW PRED:", raw_pred)
+    #st.write("FINAL PRED:", prediction)
 
     st.metric(
         "💰 Predicted Price",
@@ -337,8 +337,6 @@ else:
     # SMART RECOMMENDATION ENGINE
     # -----------------------
     from sklearn.metrics.pairwise import euclidean_distances
-
-    st.subheader("🏆 Best Nearby Investment Opportunities")
 
     feature_cols = [
         "sqft",
@@ -354,7 +352,9 @@ else:
         "postoffice_distance_km"
     ]
 
-    # Copy dataset
+    # -----------------------
+    # FILTER RELEVANT PROPERTIES
+    # -----------------------
     df_rec = df[
         df["title"].str.contains(
             "flat|apartment|bhk",
@@ -362,79 +362,145 @@ else:
             na=False
         )
     ].copy()
+
+    # Keep only detected area
+    candidate_areas = [
+        area
+        for area, dist
+        in nearby_areas[:3]
+    ]
     df_rec = df_rec[
-        df_rec["location"] == nearest_location
+        df_rec["location"].isin(candidate_areas)
     ]
 
-    # -----------------------
-    # APPLY WEIGHTING (IMPORTANT)
-    # -----------------------
-    df_rec_weighted = df_rec.copy()
-
-    #df_rec_weighted["price"] *= 1.0
-    df_rec_weighted["sqft"] *= 0.5
-    df_rec_weighted["location_score"] *= 2.0
-    df_rec_weighted["livability_score"] *= 2.0
-    df_rec_weighted["metro_distance_km"] *= 1.5
-    df_rec_weighted["hospital_distance_km"] *= 1.2
-    df_rec_weighted["college_distance_km"] *= 1.3
-    df_rec_weighted["school_distance_km"] *= 1.1
-    df_rec_weighted["railway_distance_km"] *= 1.4
-    df_rec_weighted["bus_stop_distance_km"] *= 0.8
-    df_rec_weighted["police_distance_km"] *= 1.0
-    df_rec_weighted["postoffice_distance_km"] *= 0.9
-
-    # Input vector
-    input_vector = pd.DataFrame([{
-        "sqft": sqft,
-        "location_score": location_score,
-        "livability_score": livability_score,
-        "metro_distance_km": metro_distance,
-        "hospital_distance_km": hospital_distance,
-        "railway_distance_km": railway_distance,
-        "bus_stop_distance_km": bus_distance,
-        "school_distance_km": school_distance,
-        "college_distance_km": college_distance,
-        "police_distance_km": police_distance,
-        "postoffice_distance_km": postoffice_distance
-    }])
-
-    # Apply same weights to input
-
-    #input_vector["price"] *= 1.0
-
-    input_vector["sqft"] *= 0.5
-    input_vector["location_score"] *= 2.0
-    input_vector["livability_score"] *= 2.0
-    input_vector["metro_distance_km"] *= 1.5
-    input_vector["hospital_distance_km"] *= 1.2
-    input_vector["bus_stop_distance_km"] *= 0.8
-    input_vector["railway_distance_km"] *= 1.4
-    input_vector["school_distance_km"] *= 1.1
-    input_vector["college_distance_km"] *= 1.3
-    input_vector["police_distance_km"] *= 1.0
-    input_vector["postoffice_distance_km"] *= 0.9
+    # Remove rows with missing values
+    df_rec = df_rec.dropna(subset=feature_cols)
 
     # -----------------------
-    # DISTANCE CALCULATION
+    # PRICE FORMATTER
     # -----------------------
-    distances = euclidean_distances(
-        df_rec_weighted[feature_cols],
-        input_vector[feature_cols]
-    )
-
-    df_rec["similarity"] = distances
-
-    # Get top matches
-    recommendations = df_rec.sort_values("similarity").head(5)
-
     def format_price(price):
 
         if price >= 10000000:
-             f"₹{price/10000000:.2f} Cr"
+            return f"₹{price/10000000:.2f} Cr"
 
         return f"₹{price/100000:.0f} L"
 
+    # -----------------------
+    # INVESTMENT OPPORTUNITIES
+    # -----------------------
+    st.subheader(
+        "🏆 Best Nearby Investment Opportunities"
+    )
+
+    if len(df_rec) == 0:
+
+        st.warning(
+            f"No property listings found for {nearest_location}"
+        )
+
+    else:
+
+        # -----------------------
+        # WEIGHT DATASET
+        # -----------------------
+        df_rec_weighted = df_rec.copy()
+
+        df_rec_weighted["sqft"] *= 0.5
+        df_rec_weighted["location_score"] *= 2.0
+        df_rec_weighted["livability_score"] *= 2.0
+        df_rec_weighted["metro_distance_km"] *= 1.5
+        df_rec_weighted["hospital_distance_km"] *= 1.2
+        df_rec_weighted["college_distance_km"] *= 1.3
+        df_rec_weighted["school_distance_km"] *= 1.1
+        df_rec_weighted["railway_distance_km"] *= 1.4
+        df_rec_weighted["bus_stop_distance_km"] *= 0.8
+        df_rec_weighted["police_distance_km"] *= 1.0
+        df_rec_weighted["postoffice_distance_km"] *= 0.9
+
+        # -----------------------
+        # INPUT VECTOR
+        # -----------------------
+        input_vector = pd.DataFrame([{
+            "sqft": sqft,
+            "location_score": location_score,
+            "livability_score": livability_score,
+            "metro_distance_km": metro_distance,
+            "hospital_distance_km": hospital_distance,
+            "railway_distance_km": railway_distance,
+            "bus_stop_distance_km": bus_distance,
+            "school_distance_km": school_distance,
+            "college_distance_km": college_distance,
+            "police_distance_km": police_distance,
+            "postoffice_distance_km": postoffice_distance
+        }])
+
+        input_vector["sqft"] *= 0.5
+        input_vector["location_score"] *= 2.0
+        input_vector["livability_score"] *= 2.0
+        input_vector["metro_distance_km"] *= 1.5
+        input_vector["hospital_distance_km"] *= 1.2
+        input_vector["bus_stop_distance_km"] *= 0.8
+        input_vector["railway_distance_km"] *= 1.4
+        input_vector["school_distance_km"] *= 1.1
+        input_vector["college_distance_km"] *= 1.3
+        input_vector["police_distance_km"] *= 1.0
+        input_vector["postoffice_distance_km"] *= 0.9
+
+        # -----------------------
+        # DISTANCE CALCULATION
+        # -----------------------
+        distances = euclidean_distances(
+            df_rec_weighted[feature_cols],
+            input_vector[feature_cols]
+        )
+
+        df_rec["similarity"] = distances.flatten()
+
+        recommendations = (
+            df_rec
+            .sort_values("similarity")
+            .head(5)
+        )
+
+        # -----------------------
+        # DISPLAY PROPERTY CARDS
+        # -----------------------
+        for idx, row in recommendations.iterrows():
+
+            st.markdown("---")
+
+            title = str(
+                row.get(
+                    "title",
+                    f"Property #{idx}"
+                )
+            )
+
+            if row["price"] < prediction:
+                badge = "🟢 Undervalued"
+
+            elif row["price"] <= prediction * 1.15:
+                badge = "🟡 Fair Value"
+
+            else:
+                badge = "🔴 Premium"
+
+            st.markdown(
+                f"""
+    ### 🏠 {title}
+
+    📍 **Location:** {row['location']}
+
+    💰 **Price:** {format_price(row['price'])}
+
+    📐 **Area:** {int(row['sqft'])} sqft
+
+    🌿 **Livability Score:** {row['livability_score']:.1f}/10
+
+    ⭐ **Investment Signal:** {badge}
+    """
+            )
 
     # -----------------------
     # CONFIDENCE RANGE
@@ -558,8 +624,8 @@ if nearby_areas:
 
         comparison_rows.append({
             "Area": area,
-            "Distance (km)": distance,
-            "Avg Price": int(avg_price)
+            "Distance (km)": round(distance,2),
+            "Avg Price": round(avg_price/10000000,2)
         })
 
     comparison_df = pd.DataFrame(
