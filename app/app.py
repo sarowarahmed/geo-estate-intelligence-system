@@ -392,6 +392,55 @@ else:
     )
 
     # -----------------------
+    # MARKET VALUE GAP
+    # -----------------------
+
+    similar_props = df[
+        (df["location"] == nearest_location)
+        &
+        (
+            abs(df["sqft"] - sqft)
+            <= 300
+        )
+    ]
+
+    if len(market_df) > 0:
+
+        market_avg = similar_props["price"].mean()
+
+        gap_pct = (
+            (
+                prediction - market_avg
+            ) / market_avg
+        ) * 100
+
+        st.subheader(
+            "📈 Market Value Analysis"
+        )
+
+        st.write(
+            f"Area Average Price: ₹{int(market_avg):,}"
+        )
+
+        if gap_pct < -10:
+
+            st.success(
+                f"✅ Appears {abs(gap_pct):.1f}% undervalued"
+            )
+
+        elif gap_pct > 10:
+
+            st.error(
+                f"⚠ Appears {gap_pct:.1f}% overpriced"
+            )
+
+        else:
+
+            st.info(
+                f"🟡 Fairly valued ({gap_pct:.1f}%)"
+            )
+
+    # -----------------------
     # SMART RECOMMENDATION ENGINE
     # -----------------------
     from sklearn.metrics.pairwise import euclidean_distances
