@@ -471,6 +471,73 @@ else:
         elif location_score >= 6:
             rating_score += 1
 
+        # Livability
+
+        if livability_score >= 6:
+            rating_score += 2
+
+        elif livability_score >= 4:
+            rating_score += 1
+
+        # Metro Connectivity
+
+        if metro_distance <= 2:
+            rating_score += 2
+
+        elif metro_distance <= 5:
+            rating_score += 1
+
+        if rating_score >= 8:
+
+            stars = "★★★★★"
+            verdict = "Excellent Opportunity"
+
+        elif rating_score >= 6:
+
+            stars = "★★★★☆"
+            verdict = "Strong Buy"
+
+        elif rating_score >= 4:
+
+            stars = "★★★☆☆"
+            verdict = "Fair Investment"
+
+        else:
+
+            stars = "★★☆☆☆"
+            verdict = "High Risk"
+
+        st.success(
+        f"{stars}\n\n{verdict}"
+        )
+
+        st.write("### Why?")
+
+        reasons = []
+
+        if gap_percent > 0:
+            reasons.append(
+                f"✓ {gap_percent:.1f}% undervalued"
+            )
+
+        if location_score >= 8:
+            reasons.append(
+                "✓ Strong location score"
+            )
+
+        if livability_score >= 5:
+            reasons.append(
+                "✓ Healthy livability score"
+            )
+
+        if metro_distance <= 5:
+            reasons.append(
+                "✓ Good metro connectivity"
+            )
+
+        for r in reasons:
+            st.write(r)
+
     # -----------------------
     # SMART RECOMMENDATION ENGINE
     # -----------------------
