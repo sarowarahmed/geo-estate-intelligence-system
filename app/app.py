@@ -142,16 +142,23 @@ def prepare_intelligence_heatmap(df):
         if lat is None:
             continue
 
-        price_factor = min(
-            row["price"] / 20000000,
-            1
+        # price normalization
+        price_factor = (
+            row["price"] -
+            heatmap_df["avg_price"].min()
+        ) / (
+            heatmap_df["avg_price"].max() -
+            heatmap_df["avg_price"].min()
         )
 
+        affordability_score = 10 - (price_factor * 10)
+
         investment_score = (
-            row["location_score"] * 0.40 +
+            row["location_score"] * 0.35 +
             row["livability_score"] * 0.35 +
-            (10 - min(row["metro_distance_km"], 10)) * 0.25
-        ) - (price_factor * 2)
+            (10 - min(row["metro_distance_km"], 10)) * 0.15 +
+            affordability_score * 0.15
+        )
 
         if investment_score >= 6.5:
             color = [0, 200, 0, 180]     # Green
@@ -404,7 +411,7 @@ else:
         )
     ]
 
-    if len(market_df) > 0:
+    if len(similar_props) > 0:
 
         market_avg = similar_props["price"].mean()
 
@@ -439,6 +446,30 @@ else:
             st.info(
                 f"🟡 Fairly valued ({gap_pct:.1f}%)"
             )
+        
+        # -----------------------
+        # INVESTMENT RATING ENGINE
+        # -----------------------
+        st.subheader("🏆 Investment Rating")
+        rating_score = 0
+        # Undervaluation
+
+        if gap_percent > 20:
+            rating_score += 3
+
+        elif gap_percent > 10:
+            rating_score += 2
+
+        elif gap_percent > 0:
+            rating_score += 1
+
+        # Location Quality
+
+        if location_score >= 8:
+            rating_score += 2
+
+        elif location_score >= 6:
+            rating_score += 1
 
     # -----------------------
     # SMART RECOMMENDATION ENGINE
