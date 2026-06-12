@@ -428,6 +428,9 @@ else:
         st.write(
             f"Area Average Price: ₹{int(market_avg):,}"
         )
+        st.write(
+            f"Your Predicted Price: ₹{int(prediction):,}"
+        )
 
         if gap_pct < -10:
 
@@ -454,13 +457,13 @@ else:
         rating_score = 0
         # Undervaluation
 
-        if gap_percent > 20:
+        if gap_pct < -20:
             rating_score += 3
 
-        elif gap_percent > 10:
+        elif gap_pct < -10:
             rating_score += 2
 
-        elif gap_percent > 0:
+        elif gap_pct < 0:
             rating_score += 1
 
         # Location Quality
@@ -507,17 +510,21 @@ else:
             stars = "★★☆☆☆"
             verdict = "High Risk"
 
-        st.success(
-        f"{stars}\n\n{verdict}"
+        st.markdown(
+            f"""
+        ### {stars}
+
+        ## {verdict}
+        """
         )
 
         st.write("### Why?")
 
         reasons = []
 
-        if gap_percent > 0:
+        if gap_pct < 0:
             reasons.append(
-                f"✓ {gap_percent:.1f}% undervalued"
+                f"✓ {gap_pct:.1f}% undervalued"
             )
 
         if location_score >= 8:
