@@ -1,4 +1,4 @@
-# 🏠 SmartRealty AI — A Geo-Intelligent House Price Prediction System
+# 🏠 SmartRealty AI — A Geo-Intelligent House Price Prediction
 
 🌐 **geo**
 👉 https://your-app-link.streamlit.app  
